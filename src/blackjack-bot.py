@@ -10,6 +10,11 @@ from dotenv import load_dotenv
 load_dotenv()
 TOKEN: Final[str] = os.getenv('DISCORD_BOT_TOKEN')
 SRVRID: Final = discord.Object(id=os.getenv('SERVER_ID'))
+USERNAME : Final[str] = os.getenv('USERNAME')
+PASSWORD : Final[str] = os.getenv('PASSWORD')
+ID = None
+API_URL = f"http://euclid.knox.edu:8080/api/blackjack/{id}/hit?username={username}&password={password}"
+
 
 #bot setup
 intents: Intents = Intents.all()
@@ -19,11 +24,15 @@ client : Client = commands.Bot("",intents=intents, )
 
     
     #commands
-@client.tree.command(name="hello", guild=SRVRID)
-async def sayHello(i:discord.Interaction):
-    await i.response.send_message("kys")
+@client.tree.command(name="start_game", guild=SRVRID)
+async def set_channel(i:discord.Interaction):
+    '''channel in which the bot will post the interface messages'''
+    
+    await i.response.send_message("channel selected!")
     
 #entry point
 def startDiscord() -> None:
     client.run(token=TOKEN)
     client.clear()
+    
+startDiscord()
