@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 import UrlUtil 
 import blackjackGUI as gui
 from jsonFormatter import formatEmbed
-#import GameBoard
+from GameBoard import GameBoard
 
 #get api token
 load_dotenv()
@@ -21,7 +21,7 @@ intents: Intents = Intents.all()
 intents.message_content = True
 client : Client = commands.Bot(command_prefix="gaf9403i",intents=intents, )
 
-gameBoard : discord.Message = None
+gameBoard : GameBoard = GameBoard(client=client)
 
 #used for hit / stand
 class GameUI(discord.ui.View):
@@ -29,25 +29,27 @@ class GameUI(discord.ui.View):
     async def hit_callback(self, interaction: discord.Interaction, button: Button):
         response = UrlUtil.hit()
         await interaction.response.edit_message(view=GameUI())
-        await gameBoard.edit(embed=formatEmbed(response.json()))
+        await gameBoard.boardMsg.edit(embed=formatEmbed(response.json()))
         #await gameBoard.reply(view=GameUI())
     @discord.ui.button(label="Stand", row=0, style=discord.ButtonStyle.primary)
     async def stand_callback(self, interaction: discord.Interaction, button: Button):
         response = UrlUtil.stand()
         await interaction.response.edit_message(view=EndGameUI())
-        await gameBoard.edit(embed=formatEmbed(response.json()))
+        await gameBoard.getBoard().edit(embed=formatEmbed(response.json()))
 
 # UI for game ending 
 class EndGameUI(discord.ui.View):
     @discord.ui.button(label="New Game", row=0, style=discord.ButtonStyle.green)
     async def new_game_callback(self, interaction: discord.Interaction, button: Button):
         response = UrlUtil.resetGame()
-        await gameBoard.edit(embed=formatEmbed(response.json()))
+        await gameBoard.newRound()
+        await gameBoard.getBoard().edit(embed=formatEmbed(response.json()))
+        
     @discord.ui.button(label="End Game", row=0, style=discord.ButtonStyle.red)
     async def end_game_callback(self, interaction: discord.Interaction, button: Button):
         response = UrlUtil.finishGame()
         await interaction.response.edit_message(delete_after=0.01)
-        await gameBoard.edit(embed=formatEmbed(response.json()))
+        await gameBoard.getBoard().edit(embed=formatEmbed(response.json()))
     
     #commands
 
@@ -55,27 +57,7 @@ class EndGameUI(discord.ui.View):
 @client.tree.command(name="start_new_game", guild=SRVRID)
 async def start_game(i:discord.Interaction):
     '''Starts a new game or resumes most recent game'''
-    global gameBoard
-    response = UrlUtil.startGame()
-    gameData : dict = response.json()
-    sessionID = gameData.get("sessionId")
-    print(sessionID)
-    UrlUtil.setGameID(sessionID)
-    #UrlUtil.resetGame()
-    await i.response.send_message(content="Starting/Resuming game...",ephemeral=True)
-    try:
-        if gameData.get("phase") == "BETTING":
-            await i.channel.send(content=f"Current Balance: {str(gameData.get("balance"))} \n Enter bet in increments of 10, under 1000: ")
-            input : discord.Message = await client.wait_for("message", check=lambda message : message.author == i.user)
-            result = int(input.content)
-            print(result)
-            if result > 1000 or result <= 0 or result % 10 != 0:
-                raise Exception("Not valid number")
-            gameData = UrlUtil.bet(result).json() 
-        gameBoard = await i.channel.send(embed=formatEmbed(gameData=gameData))
-        await i.followup.send(view=GameUI(),ephemeral=True)
-    except:
-         await i.followup.send(content="Error: Enter an acceptable bet", ephemeral=True)   
+    await gameBoard.startNewGame(i=i)  
    
   
   
