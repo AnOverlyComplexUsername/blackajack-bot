@@ -36,8 +36,9 @@ def bet(amount : int):
 def startGame():
     return requests.post(URLBuilder("start"))
 
-def resumeGame():
-    return requests.post(URLBuilder(f"resume/{sesID}"))
+def resumeGame(id: str):
+    setGameID(id=id)
+    return requests.post(URLBuilder(f"resume/{id}"))
 
 def getGameState():
     return requests.get(URLBuilder(f"{sesID}/state"))

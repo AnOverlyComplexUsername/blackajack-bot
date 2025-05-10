@@ -7,8 +7,9 @@ from dotenv import load_dotenv
 
 import UrlUtil 
 import blackjackGUI as gui
+import discord.ext
 from jsonFormatter import formatEmbed
-#import GameBoard
+#import GameBoard, i=i
 
 #get api token
 load_dotenv()
@@ -19,7 +20,7 @@ SRVRID: Final = discord.Object(id=os.getenv('SERVER_ID'))
 #bot setup
 intents: Intents = Intents.all()
 intents.message_content = True
-client : Client = commands.Bot(command_prefix="gaf9403i",intents=intents, )
+client : commands.Bot = commands.Bot(command_prefix="gaf9403i",intents=intents, )
 
 gameBoard : discord.Message = None
 
@@ -28,27 +29,72 @@ class GameUI(discord.ui.View):
     @discord.ui.button(label="Hit", row=0, style=discord.ButtonStyle.primary)
     async def hit_callback(self, interaction: discord.Interaction, button: Button):
         response = UrlUtil.hit()
-        await interaction.response.edit_message(view=GameUI())
-        await gameBoard.edit(embed=formatEmbed(response.json()))
-        #await gameBoard.reply(view=GameUI())
+        await interaction.response.defer()
+        if response.json().get("phase") == "RESOLVED":
+            msg = await interaction.original_response()
+            await msg.edit(view=EndGameUI())
+        await gameBoard.edit(embed=formatEmbed(response.json(), i=interaction)), 
     @discord.ui.button(label="Stand", row=0, style=discord.ButtonStyle.primary)
     async def stand_callback(self, interaction: discord.Interaction, button: Button):
         response = UrlUtil.stand()
         await interaction.response.edit_message(view=EndGameUI())
-        await gameBoard.edit(embed=formatEmbed(response.json()))
+        await gameBoard.edit(embed=formatEmbed(response.json(),i=interaction))
 
 # UI for game ending 
 class EndGameUI(discord.ui.View):
     @discord.ui.button(label="New Game", row=0, style=discord.ButtonStyle.green)
     async def new_game_callback(self, interaction: discord.Interaction, button: Button):
-        response = UrlUtil.resetGame()
-        await gameBoard.edit(embed=formatEmbed(response.json()))
+        response = UrlUtil.getGameState().json()
+        for item in self.children:
+            item.disabled = True
+        await interaction.response.edit_message(view=self)
+        await test2(i=interaction,gameData=response)
+        msg = await interaction.original_response()
+        await msg.edit(view=GameUI())
     @discord.ui.button(label="End Game", row=0, style=discord.ButtonStyle.red)
     async def end_game_callback(self, interaction: discord.Interaction, button: Button):
-        response = UrlUtil.finishGame()
+        UrlUtil.finishGame()
         await interaction.response.edit_message(delete_after=0.01)
-        await gameBoard.edit(embed=formatEmbed(response.json()))
     
+#helper funciton 
+async def test(i : discord.Interaction, gameData : dict):
+    global gameBoard
+    try:
+        if gameData.get("phase") == "RESOLVED":
+            UrlUtil.resetGame()
+        if gameData.get("phase") == "BETTING":
+            msg = await i.channel.send(content=f"Current Balance: {str(gameData.get("balance"))} \n Enter bet in increments of 10, under 1000: ")
+            input : discord.Message = await client.wait_for("message", check=lambda message : message.author == i.user)
+            result = int(input.content)
+            await msg.delete()
+            await input.delete()
+            if result > 1000 or result <= 0 or result % 10 != 0:
+                raise Exception("Not valid number")
+            gameData = UrlUtil.bet(result).json() 
+        gameBoard = await i.channel.send(embed=formatEmbed(gameData=gameData, i=i))
+        await i.followup.send(view=GameUI(),ephemeral=True)
+        
+    except:
+         await i.followup.send(content="Error: Enter an acceptable bet", ephemeral=True)   
+
+async def test2(i : discord.Interaction, gameData : dict):
+    global gameBoard
+    try:
+        if gameData.get("phase") == "RESOLVED":
+            UrlUtil.resetGame()
+            print("here")
+            msg = await i.channel.send(content=f"Current Balance: {str(gameData.get("balance"))} \n Enter bet in increments of 10, under 1000: ")
+            input : discord.Message = await client.wait_for("message", check=lambda message : message.author == i.user) 
+            result = int(input.content)
+            if result > 1000 or result <= 0 or result % 10 != 0:
+                raise Exception("Not valid number")
+            await input.delete()
+            await msg.delete()
+            gameData = UrlUtil.bet(result).json() 
+            await gameBoard.edit(embed=formatEmbed(gameData=gameData, i=i))
+    except:
+         await i.followup.send(content="Error: Enter an acceptable bet", ephemeral=True)   
+
     #commands
 
 
@@ -62,22 +108,18 @@ async def start_game(i:discord.Interaction):
     print(sessionID)
     UrlUtil.setGameID(sessionID)
     #UrlUtil.resetGame()
-    await i.response.send_message(content="Starting/Resuming game...",ephemeral=True)
-    try:
-        if gameData.get("phase") == "BETTING":
-            await i.channel.send(content=f"Current Balance: {str(gameData.get("balance"))} \n Enter bet in increments of 10, under 1000: ")
-            input : discord.Message = await client.wait_for("message", check=lambda message : message.author == i.user)
-            result = int(input.content)
-            print(result)
-            if result > 1000 or result <= 0 or result % 10 != 0:
-                raise Exception("Not valid number")
-            gameData = UrlUtil.bet(result).json() 
-        gameBoard = await i.channel.send(embed=formatEmbed(gameData=gameData))
-        await i.followup.send(view=GameUI(),ephemeral=True)
-    except:
-         await i.followup.send(content="Error: Enter an acceptable bet", ephemeral=True)   
+    await i.response.send_message(content="Starting game...",ephemeral=True)
+    await test(i=i,gameData=gameData)  
    
-  
+@client.tree.command(name="resume_session", guild=SRVRID)
+async def resume_session(i:discord.Interaction):
+    UrlUtil.resumeGame("ca32e56c-455b-45e0-aaf6-0910929b0ffb")
+    response = UrlUtil.resetGame()
+    gameData : dict = response.json()
+    await i.response.send_message(content="Resuming game...",ephemeral=True)
+    await test(i=i, gameData=gameData)
+
+
   
 @client.tree.command(name="list_sessions", guild=SRVRID)
 async def list_sessions(i:discord.Interaction):
