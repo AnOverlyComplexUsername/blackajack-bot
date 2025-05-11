@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 import UrlUtil 
 import blackjackGUI as gui
-from jsonFormatter import formatEmbed
+#from jsonFormatter import formatEmbed
 from GameBoard import GameBoard
 
 #get api token
@@ -23,77 +23,33 @@ intents.message_content = True
 client : Client = commands.Bot(command_prefix="gaf9403i",intents=intents, )
 
 gameBoard : GameBoard = GameBoard(client=client)
-
-#used for hit / stand
-class GameUI(discord.ui.View):
-    @discord.ui.button(label="Hit", row=0, style=discord.ButtonStyle.primary)
-    async def hit_callback(self, interaction: discord.Interaction, button: Button):
-        response = UrlUtil.hit()
-<<<<<<< Updated upstream
-        await interaction.response.edit_message(view=GameUI())
-        await gameBoard.boardMsg.edit(embed=formatEmbed(response.json()))
-        #await gameBoard.reply(view=GameUI())
-=======
-        await interaction.response.defer()
-        if response.json().get("phase") == "RESOLVED":
-            if response.json().get("playerValue") == 21 or response.json().get("dealerValue") == 21:
-                UrlUtil.stand()
-            msg = await interaction.original_response()
-            await msg.edit(view=EndGameUI())
-        await gameBoard.edit(embed=formatEmbed(response.json(), i=interaction)), 
->>>>>>> Stashed changes
-    @discord.ui.button(label="Stand", row=0, style=discord.ButtonStyle.primary)
-    async def stand_callback(self, interaction: discord.Interaction, button: Button):
-        response = UrlUtil.stand()
-        await interaction.response.edit_message(view=EndGameUI())
-        await gameBoard.getBoard().edit(embed=formatEmbed(response.json()))
-
-# UI for game ending 
-class EndGameUI(discord.ui.View):
-    @discord.ui.button(label="New Game", row=0, style=discord.ButtonStyle.green)
-    async def new_game_callback(self, interaction: discord.Interaction, button: Button):
-<<<<<<< Updated upstream
-        response = UrlUtil.resetGame()
-        await gameBoard.newRound()
-        await gameBoard.getBoard().edit(embed=formatEmbed(response.json()))
-        
-=======
-        response = UrlUtil.getGameState()
-        for item in self.children:
-            item.disabled = True
-        await interaction.response.edit_message(view=self)
-        await test2(i=interaction,gameData=response)
-        msg = await interaction.original_response()
-        await msg.edit(view=GameUI())
->>>>>>> Stashed changes
-    @discord.ui.button(label="End Game", row=0, style=discord.ButtonStyle.red)
-    async def end_game_callback(self, interaction: discord.Interaction, button: Button):
-        response = UrlUtil.finishGame()
-        await interaction.response.edit_message(delete_after=0.01)
-        await gameBoard.getBoard().edit(embed=formatEmbed(response.json()))
     
     #commands
-
-
 @client.tree.command(name="start_new_game", guild=SRVRID)
 async def start_game(i:discord.Interaction):
     '''Starts a new game or resumes most recent game'''
-    await gameBoard.startNewGame(i=i)  
+    global gameBoard
+    response = UrlUtil.startGame()
+    gameData : dict = response.json()
+    sessionID = gameData.get("sessionId")
+    print(sessionID)
+    UrlUtil.setGameID(sessionID)
+    await i.response.send_message(content="Starting game...",ephemeral=True)
+    try:
+        await gameBoard.startNewGame(i=i,gameData=gameData)  
+        await i.followup.send(view=gui.GameUI(),ephemeral=True)
+    except:
+        await i.followup.send(content="Error: Enter an acceptable bet", ephemeral=True)   
    
-<<<<<<< Updated upstream
-  
-=======
 @client.tree.command(name="resume_session", guild=SRVRID)
 async def resume_session(i:discord.Interaction):
-    '''resumes a chosen game session'''
     UrlUtil.resumeGame("ca32e56c-455b-45e0-aaf6-0910929b0ffb")
     response = UrlUtil.resetGame()
     gameData : dict = response.json()
     await i.response.send_message(content="Resuming game...",ephemeral=True)
-    await test(i=i, gameData=gameData)
+    await gameBoard.continueGame(i=i, gameData=gameData)
 
 
->>>>>>> Stashed changes
   
 @client.tree.command(name="list_sessions", guild=SRVRID)
 async def list_sessions(i:discord.Interaction):

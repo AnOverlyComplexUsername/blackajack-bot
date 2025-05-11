@@ -37,8 +37,9 @@ def bet(amount : int) -> dict:
 def startGame():
     return requests.post(URLBuilder("start"))
 
-def resumeGame():
-    return requests.post(URLBuilder(f"resume/{sesID}"))
+def resumeGame(id : str):
+    ''' takes a session id and reusmes playing in that session'''
+    return requests.post(URLBuilder(f"resume/{id}"))
 
 def getGameState() -> dict:
     return requests.get(URLBuilder(f"{sesID}/state")).json()

@@ -12,11 +12,7 @@ def formatEmbed(gameData : dict) -> discord.Embed:
         case "PUSH":
             title = "Draw, No One Wins"
         case __:
-<<<<<<< Updated upstream
-            title = "Game"
-=======
             title = "Unresolved Game"
->>>>>>> Stashed changes
     embedVar = discord.Embed(title=title, color=0x00ff00)   
     embedVar.add_field(name="Dealer: ", value=f"Cards: {gameData.get("dealerCards")} | Value: {str(gameData.get("dealerValue"))}")
     for i in range(2): # adds blank spaces
