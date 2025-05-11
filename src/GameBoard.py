@@ -3,6 +3,7 @@ import UrlUtil
 from jsonFormatter import formatEmbed 
 
 
+
 class GameBoard:
     
     sesID : str = None
@@ -25,6 +26,12 @@ class GameBoard:
         if gameData:
             self.sesID = gameData.get("sessionId")
 
+        self.data = gameData
+        self.board = boardMsg 
+        self.client = client
+        if gameData:
+            self.sesID = gameData.get("sessionId")
+
     
     def setBoardMessage(self,msg : discord.Message):
         ''' sets current board being used'''
@@ -41,6 +48,7 @@ class GameBoard:
     def getBalance(self) -> str:
         '''returns the current player balance'''
         return str(self.data.get("balance"))
+
     
     def getPlayerValue(self) -> str:
         '''returns current player card value'''
