@@ -15,7 +15,6 @@ load_dotenv()
 TOKEN: Final[str] = os.getenv('DISCORD_BOT_TOKEN')
 SRVRID: Final = discord.Object(id=os.getenv('SERVER_ID'))
 
-# TODO: add normal resuming of gameplay via drop down menu + left right; maybe add seperate data base for storing discord user side stuff (?) 
     
 #bot setup
 intents: Intents = Intents.all()
@@ -47,14 +46,13 @@ async def resume_session(i:discord.Interaction, id : str):
     ''' resumes a game given a session ID'''
     UrlUtil.setGameID(id=id.strip())
     response = UrlUtil.resumeGame()
-    #response = UrlUtil.resetGame()
     gameData : dict = response.json()
     await i.response.send_message(content="Resuming game...",ephemeral=True)
-   # try:
-    await gameBoard.startNewGame(i=i,gameData=gameData)  
-    await i.followup.send(view=StartGameUI(gameBoard),ephemeral=True)
-    #except:
-        # await i.followup.send(content="Error: Enter an acceptable bet", ephemeral=True)   
+    try:
+        await gameBoard.startNewGame(i=i,gameData=gameData)  
+        await i.followup.send(view=StartGameUI(gameBoard),ephemeral=True)
+    except:
+        await i.followup.send(content="Error: Enter an acceptable bet", ephemeral=True)   
 
 
   
