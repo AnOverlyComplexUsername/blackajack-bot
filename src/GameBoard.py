@@ -71,7 +71,6 @@ class GameBoard:
             try:
                 if gameData.get("phase") == "RESOLVED":
                     UrlUtil.resetGame()
-                    print("here")
                     await self.recieveNewBet(i=i)
                     await self.board.edit(embed=formatEmbed(gameData=self.data, i=i))
                 break
