@@ -3,7 +3,15 @@ import discord
 '''formats game data jsons into embeds'''
 
 def formatSessionsEmbed(sessions : list[dict], startIndex : int = 0, entryRange: int = 5) -> discord.Embed:
-    '''returns a formatted embed of a list of sessions, 10 at a time, from oldest to newest'''
+    '''returns a formatted embed of a list of sessions
+        Parameters
+        -----------
+    sesList: :class:`list`
+        dictionary of list of all sessions in a dictionary format   
+    startIndex: :class:`int`
+        first index that's at the top of the page 
+    entryRange: :class:`int`
+        how many entries should be in each page'''
     embedVar = discord.Embed(title=f"Active Sessions {str(startIndex + 1)} to {str(startIndex + entryRange)}", color=0x75b7ea)
     for i in range(entryRange):
         if startIndex + i >  sessions.__len__() - 1 :
@@ -12,7 +20,13 @@ def formatSessionsEmbed(sessions : list[dict], startIndex : int = 0, entryRange:
     return embedVar
 
 def formatEmbed(gameData : dict, i : discord.Interaction) -> discord.Embed:
-    '''returns a formatted embed of a turn'''
+    '''returns a formatted embed of a turn
+        Parameters
+        -----------
+    gameData: :class:`dict`
+        dictionary containing JSON data of current game state
+    i: :class:`Interaction`
+        discord interaction that called formatEmbed, used to get the username of the one who started the interaction'''
     print(gameData)
     username = i.user.display_name
     match gameData.get("outcome"):

@@ -16,16 +16,12 @@ class GameBoard:
         ''' Parameters
         -----------
         gameData: :class:`dict`
-            dictionary of json game data
+            dictionary of JSON game data
         board: :class:`Message`
-            gmaeBoard message that's being used for current game
+            gameBoard message that's being used for current game
+        client: :class`client`
+            current discord bot client being used
         '''
-        self.data = gameData
-        self.board = boardMsg 
-        self.client = client
-        if gameData:
-            self.sesID = gameData.get("sessionId")
-
         self.data = gameData
         self.board = boardMsg 
         self.client = client
@@ -84,7 +80,7 @@ class GameBoard:
                 await i.followup.send(content="Error: Enter an acceptable bet", ephemeral=True)
     
     async def recieveNewBet(self, i : discord.Interaction) -> dict:
-        '''recieves and sends the new bet, returning game state result'''
+        '''recieves new bet by awaiting user's new bet in Discord, sends new bet and returns game state result'''
         msg = await i.channel.send(content=f"Current Balance: {self.getBalance()} \n Enter bet in increments of 10, under 1000: ")
         input : discord.Message = await self.client.wait_for("message", check=lambda message : message.author == i.user)
         result = int(input.content)

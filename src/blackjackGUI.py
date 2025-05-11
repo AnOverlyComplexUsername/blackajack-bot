@@ -96,6 +96,7 @@ class EndGameUI(GameUI):
         await msg.edit(view=StartGameUI(self.board))
     @discord.ui.button(label="End Game", row=0, style=discord.ButtonStyle.red)
     async def end_game_callback(self, interaction: discord.Interaction, button: Button):
+        '''ends current game and archives results to database after finishing'''
         UrlUtil.finishGame()
         await interaction.response.edit_message(delete_after=0.01)
         

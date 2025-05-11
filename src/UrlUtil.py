@@ -5,14 +5,12 @@ import requests
 
 '''wrapper functions for interactiong w/ blackjack server'''
 
-#helper for parsing URL strings 
 load_dotenv()
 USER : Final[str] = os.getenv('USER')
 PASS : Final[str] = os.getenv('PASSWORD')
 sesID : str = None
 __API_START : str = "http://euclid.knox.edu:8080/api/blackjack/"
 __API_END : str = f"?username={USER}&password={PASS}"
-#http://euclid.knox.edu:8080/api/blackjack/sessions/vtang?password=3fe1c42
 
 def setGameID(id : str):
     '''sets current game id'''
@@ -52,5 +50,6 @@ def getCurSessions():
 
             
 def URLBuilder(action : str) -> str:
+    '''helper for parsing URL strings'''
     return __API_START + action + __API_END
         
