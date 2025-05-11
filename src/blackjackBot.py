@@ -43,7 +43,7 @@ async def start_game(i:discord.Interaction):
    
 @client.tree.command(name="resume_session", guild=SRVRID)
 async def resume_session(i:discord.Interaction, id : str):
-    ''' resumes a game given a session ID'''
+    '''Resumes a game given a session ID'''
     UrlUtil.setGameID(id=id.strip())
     response = UrlUtil.resumeGame()
     gameData : dict = response.json()
@@ -58,7 +58,7 @@ async def resume_session(i:discord.Interaction, id : str):
   
 @client.tree.command(name="list_sessions", guild=SRVRID)
 async def list_sessions(i:discord.Interaction):
-    '''Returns list of ongoing sessions from newest to oldest'''
+    '''Returns list of ongoing sessions from oldest to newest'''
     entryRange = 5
     sessions = UrlUtil.getGameSessions()        
     await i.response.send_message(embed=formatSessionsEmbed(sessions=sessions, startIndex= 0, entryRange=entryRange),view=SessionList(sesList=sessions,entryRange=entryRange))
