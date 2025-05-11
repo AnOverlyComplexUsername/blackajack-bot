@@ -32,37 +32,30 @@ class GameBoard:
         if gameData:
             self.sesID = gameData.get("sessionId")
 
-    @property
     def setBoardMessage(self,msg : discord.Message):
         ''' sets current board being used'''
         self.board = msg
     
-    @property
     def getBoardMessage(self):
         ''' returns current board being used'''
         return self.board 
         
-    @property
     def setGameData(self, data : dict):
         '''updates and sets game data'''
         self.data = data
     
-    @property
     def getBalance(self) -> str:
         '''returns the current player balance'''
         return str(self.data.get("balance"))
 
-    @property
-    def getPlayerValue(self) -> str:
+    def getPlayerValue(self) -> int:
         '''returns current player card value'''
-        return str(UrlUtil.getGameState().get("playerValue"))
+        return UrlUtil.getGameState().get("playerValue")
     
-    @property
-    def getDealerValue(self) -> str:
+    def getDealerValue(self) -> int:
         '''returns current dealer card value'''
-        return str(UrlUtil.getGameState().get("dealerValue"))
+        return UrlUtil.getGameState().get("dealerValue")
     
-    @property
     def getPhase(self) -> str:
         ''' returns current state of game'''
         return UrlUtil.getGameState().get("phase")

@@ -14,7 +14,6 @@ class SessionList(discord.ui.View):
         super().__init__(timeout=timeout)
         self.listSize = sesList.__len__()
         self.sesList = sesList
-        print(self.listSize)
         self.entryRange = entryRange
         self.curStartIndex = curStartIndex
         if self.listSize < entryRange or self.curStartIndex + entryRange > self.listSize:

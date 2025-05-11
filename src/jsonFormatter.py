@@ -8,7 +8,7 @@ def formatSessionsEmbed(sessions : list[dict], startIndex : int = 0, entryRange:
     for i in range(entryRange):
         if startIndex + i >  sessions.__len__() - 1 :
             break
-        embedVar.add_field(name=f"Session {startIndex + i + 1}, ID:", value=sessions[startIndex+i].get("sessionId") + f"\n Balance: " + str(sessions[i].get("currentBet")), inline=False)
+        embedVar.add_field(name=f"Session {startIndex + i + 1}, ID:", value=sessions[startIndex+i].get("sessionId") + f"\n Balance: " + str(sessions[startIndex + i].get("balance")), inline=False)
     return embedVar
 
 def formatEmbed(gameData : dict, i : discord.Interaction) -> discord.Embed:
