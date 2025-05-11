@@ -2,54 +2,42 @@ import discord
 from discord import Button
 import UrlUtil
 from GameBoard import GameBoard
-from jsonFormatter import formatEmbed
+from jsonFormatter import formatEmbed, formatSessionsEmbed
 
+class SessionList(discord.ui.View):
+    sesList : list[dict] = None
+    listSize : int = 0
+    curStartIndex : int = 0
+    entryRange : int = 5
+    
+    def __init__(self, sesList : list[dict], curStartIndex : int = 0, entryRange : int = 5, timeout = 180):
+        super().__init__(timeout=timeout)
+        self.listSize = sesList.__len__()
+        self.sesList = sesList
+        print(self.listSize)
+        self.entryRange = entryRange
+        self.curStartIndex = curStartIndex
+        if self.listSize < entryRange or self.curStartIndex + entryRange > self.listSize:
+            nextButton : discord.Button= [x for x in self.children if x.custom_id == "next"][0]
+            nextButton.disabled = True
+        if self.curStartIndex == 0:
+            prevButton : discord.Button= [x for x in self.children if x.custom_id == "prev"][0]
+            prevButton.disabled = True
+            
+        
+        
+    @discord.ui.button(label="Previous", row=0, style=discord.ButtonStyle.primary, custom_id="prev")
+    async def prev_callback(self, interaction: discord.Interaction, button: Button):
+        self.curStartIndex -= self.entryRange
+        await interaction.response.edit_message(view=SessionList(sesList=self.sesList,entryRange=self.entryRange,curStartIndex=self.curStartIndex),embed=formatSessionsEmbed(sessions=self.sesList, startIndex=self.curStartIndex, entryRange=self.entryRange))
 
+    @discord.ui.button(label="Next", row=0, style=discord.ButtonStyle.primary,custom_id="next")
+    async def next_callback(self, interaction: discord.Interaction, button: Button):
+        self.curStartIndex += self.entryRange
+        await interaction.response.edit_message(view=SessionList(sesList=self.sesList,entryRange=self.entryRange,curStartIndex=self.curStartIndex),embed=formatSessionsEmbed(sessions=self.sesList, startIndex=self.curStartIndex, entryRange=self.entryRange))
 
-
-
-class MyView(discord.ui.View):
-    @discord.ui.select( # the decorator that lets you specify the properties of the select menu
-        placeholder = "Choose a Flavor!", # the placeholder text that will be displayed if nothing is selected
-        min_values = 1, # the minimum number of values that must be selected by the users
-        max_values = 1, # the maximum number of values that can be selected by the users
-        options = [ # the list of options from which users can choose, a required field
-            discord.SelectOption(
-                label="Vanilla",
-                description="Pick this if you like vanilla!"
-            ),
-            discord.SelectOption(
-                label="Chocolate",
-                description="Pick this if you like chocolate!"
-            ),
-            discord.SelectOption(
-                label="Strawberry",
-                description="Pick this if you like strawberry!"
-            )
-        ]
-    )
-    async def select_callback(self, select, interaction : discord.Interaction): # the function called when the user is done selecting options
-        await interaction.response.send_message(f"Awesome! I like {select.values[0]} too!")
-
-class StartGameUI(discord.ui.View):
-    @discord.ui.button(label="Button 1", row=0, style=discord.ButtonStyle.primary)
-    async def click_me_button(self, interaction: discord.Interaction, button: Button):
-        await interaction.response.send_message("You clicked the button!")
-    @discord.ui.button(label="Button 2", row=0, style=discord.ButtonStyle.primary)
-    async def second_button_callback(self, interaction: discord.Interaction, button: Button):
-        await interaction.response.send_message("You pressed me!")
-        button.disabled = True
-    @discord.ui.button(label="Button 2", row=0, style=discord.ButtonStyle.primary)
-    async def second_button_callbacks(self, interaction: discord.Interaction, button: Button):
-        await interaction.response.send_message("You pressed me!")
-    @discord.ui.button(label="Button 2", row=0, style=discord.ButtonStyle.primary)
-    async def second_button_callbackss(self, interaction: discord.Interaction, button: Button):
-        await interaction.response.send_message("You pressed me!")
-    @discord.ui.button(label="Button 2", row=0, style=discord.ButtonStyle.primary)
-    async def second_button_callbacksss(self, interaction: discord.Interaction, button: Button):
-        await interaction.response.send_message("You pressed me!")        
-
-
+        
+        
 
 class GameUI(discord.ui.View):
     board : GameBoard = None

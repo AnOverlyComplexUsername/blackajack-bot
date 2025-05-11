@@ -45,7 +45,7 @@ def getGameState() -> dict:
     return requests.get(URLBuilder(f"{sesID}/state")).json()
 
 def getGameSessions():
-    return requests.get(__API_START + f"sessions/{USER}?password={PASS}")
+    return requests.get(__API_START + f"sessions/{USER}?password={PASS}").json()
 
 def getCurSessions():
     return requests.get(URLBuilder("my-session"))

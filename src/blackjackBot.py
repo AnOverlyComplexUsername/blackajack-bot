@@ -1,13 +1,13 @@
 import os
 from typing import Final
 import discord 
-from discord import Button, Intents, Client 
+from discord import Intents, Client 
 from discord.ext import commands
 from dotenv import load_dotenv
 
 import UrlUtil 
-from blackjackGUI import StartGameUI, EndGameUI
-#from jsonFormatter import formatEmbed
+from blackjackGUI import StartGameUI, SessionList
+from jsonFormatter import formatSessionsEmbed
 from GameBoard import GameBoard
 
 #get api token
@@ -43,11 +43,11 @@ async def start_game(i:discord.Interaction):
         await i.followup.send(content="Error: Enter an acceptable bet", ephemeral=True)   
    
 @client.tree.command(name="resume_session", guild=SRVRID)
-async def resume_session(i:discord.Interaction):
+async def resume_session(i:discord.Interaction, id : str):
     ''' resumes a game given a session ID'''
-    UrlUtil.setGameID("ca32e56c-455b-45e0-aaf6-0910929b0ffb")
-    UrlUtil.resumeGame()
-    response = UrlUtil.resetGame()
+    UrlUtil.setGameID(id=id.strip())
+    response = UrlUtil.resumeGame()
+    #response = UrlUtil.resetGame()
     gameData : dict = response.json()
     await i.response.send_message(content="Resuming game...",ephemeral=True)
    # try:
@@ -60,14 +60,10 @@ async def resume_session(i:discord.Interaction):
   
 @client.tree.command(name="list_sessions", guild=SRVRID)
 async def list_sessions(i:discord.Interaction):
-    '''Returns list of ongoing sessions'''
-    response = UrlUtil.getGameSessions()
-    sessions = response.json() # a list of dictionaries
-    embedVar = discord.Embed(title="Active Sessions", color=0x00ff00)
-    for c in range(25):
-        embedVar.add_field(name=f"Session {c}, ID:", value=sessions[c].get("sessionId") + f"\n Balance: " + str(sessions[c].get("currentBet")), inline=False)
-        
-    await i.response.send_message(embed=embedVar)
+    '''Returns list of ongoing sessions from newest to oldest'''
+    entryRange = 5
+    sessions = UrlUtil.getGameSessions()        
+    await i.response.send_message(embed=formatSessionsEmbed(sessions=sessions, startIndex= 0, entryRange=entryRange),view=SessionList(sesList=sessions,entryRange=entryRange))
     
 
 #handling startup
