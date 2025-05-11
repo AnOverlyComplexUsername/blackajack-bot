@@ -3,6 +3,8 @@ from typing import Final
 from dotenv import load_dotenv
 import requests
 
+'''wrapper functions for interactiong w/ blackjack server'''
+
 #helper for parsing URL strings 
 load_dotenv()
 USER : Final[str] = os.getenv('USER')
@@ -20,18 +22,17 @@ def setGameID(id : str):
 def resetGame():
     return requests.post(URLBuilder(f"{sesID}/reset"))
 
-def stand():
-    return requests.post(URLBuilder(f"{sesID}/stand" ))
+def stand()  -> dict:
+    return requests.post(URLBuilder(f"{sesID}/stand" )).json()
 
-def hit():
-    return requests.post(URLBuilder(f"{sesID}/hit"))
+def hit() -> dict:
+    return requests.post(URLBuilder(f"{sesID}/hit")).json()
 
 def finishGame():
     return requests.post(URLBuilder(f"{sesID}/finish"))
 
-def bet(amount : int):
-    print(sesID)
-    return requests.post(URLBuilder(f"{sesID}/bet/{amount}"))
+def bet(amount : int) -> dict:
+    return requests.post(URLBuilder(f"{sesID}/bet/{amount}")).json()
 
 def startGame():
     return requests.post(URLBuilder("start"))
@@ -39,8 +40,8 @@ def startGame():
 def resumeGame():
     return requests.post(URLBuilder(f"resume/{sesID}"))
 
-def getGameState():
-    return requests.get(URLBuilder(f"{sesID}/state"))
+def getGameState() -> dict:
+    return requests.get(URLBuilder(f"{sesID}/state")).json()
 
 def getGameSessions():
     return requests.get(__API_START + f"sessions/{USER}?password={PASS}")

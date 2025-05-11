@@ -15,7 +15,8 @@ load_dotenv()
 TOKEN: Final[str] = os.getenv('DISCORD_BOT_TOKEN')
 SRVRID: Final = discord.Object(id=os.getenv('SERVER_ID'))
 
-
+# TODO: add normal resuming of gameplay via drop down menu + left right; maybe add seperate data base for storing discord user side stuff (?) 
+    
 #bot setup
 intents: Intents = Intents.all()
 intents.message_content = True
@@ -28,9 +29,19 @@ class GameUI(discord.ui.View):
     @discord.ui.button(label="Hit", row=0, style=discord.ButtonStyle.primary)
     async def hit_callback(self, interaction: discord.Interaction, button: Button):
         response = UrlUtil.hit()
+<<<<<<< Updated upstream
         await interaction.response.edit_message(view=GameUI())
         await gameBoard.boardMsg.edit(embed=formatEmbed(response.json()))
         #await gameBoard.reply(view=GameUI())
+=======
+        await interaction.response.defer()
+        if response.json().get("phase") == "RESOLVED":
+            if response.json().get("playerValue") == 21 or response.json().get("dealerValue") == 21:
+                UrlUtil.stand()
+            msg = await interaction.original_response()
+            await msg.edit(view=EndGameUI())
+        await gameBoard.edit(embed=formatEmbed(response.json(), i=interaction)), 
+>>>>>>> Stashed changes
     @discord.ui.button(label="Stand", row=0, style=discord.ButtonStyle.primary)
     async def stand_callback(self, interaction: discord.Interaction, button: Button):
         response = UrlUtil.stand()
@@ -41,10 +52,20 @@ class GameUI(discord.ui.View):
 class EndGameUI(discord.ui.View):
     @discord.ui.button(label="New Game", row=0, style=discord.ButtonStyle.green)
     async def new_game_callback(self, interaction: discord.Interaction, button: Button):
+<<<<<<< Updated upstream
         response = UrlUtil.resetGame()
         await gameBoard.newRound()
         await gameBoard.getBoard().edit(embed=formatEmbed(response.json()))
         
+=======
+        response = UrlUtil.getGameState()
+        for item in self.children:
+            item.disabled = True
+        await interaction.response.edit_message(view=self)
+        await test2(i=interaction,gameData=response)
+        msg = await interaction.original_response()
+        await msg.edit(view=GameUI())
+>>>>>>> Stashed changes
     @discord.ui.button(label="End Game", row=0, style=discord.ButtonStyle.red)
     async def end_game_callback(self, interaction: discord.Interaction, button: Button):
         response = UrlUtil.finishGame()
@@ -59,7 +80,20 @@ async def start_game(i:discord.Interaction):
     '''Starts a new game or resumes most recent game'''
     await gameBoard.startNewGame(i=i)  
    
+<<<<<<< Updated upstream
   
+=======
+@client.tree.command(name="resume_session", guild=SRVRID)
+async def resume_session(i:discord.Interaction):
+    '''resumes a chosen game session'''
+    UrlUtil.resumeGame("ca32e56c-455b-45e0-aaf6-0910929b0ffb")
+    response = UrlUtil.resetGame()
+    gameData : dict = response.json()
+    await i.response.send_message(content="Resuming game...",ephemeral=True)
+    await test(i=i, gameData=gameData)
+
+
+>>>>>>> Stashed changes
   
 @client.tree.command(name="list_sessions", guild=SRVRID)
 async def list_sessions(i:discord.Interaction):

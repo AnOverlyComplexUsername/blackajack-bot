@@ -1,7 +1,9 @@
 import discord 
 from discord import Button
 import UrlUtil
+from GameBoard import GameBoard
 from jsonFormatter import formatEmbed
+
 
 
 
@@ -47,20 +49,52 @@ class GameStartUI(discord.ui.View):
     async def second_button_callbacksss(self, interaction: discord.Interaction, button: Button):
         await interaction.response.send_message("You pressed me!")        
 
-#used for hit / stand
+
+
 class GameUI(discord.ui.View):
+    board : GameBoard = None
+    
+    def __init__(self, board : GameBoard, timeout = 180):
+        super().__init__(timeout=timeout)
+        self.board = board
+        
+ #UI for when the game starts (hit/stand)       
+class StartGameUI(GameUI):
     @discord.ui.button(label="Hit", row=0, style=discord.ButtonStyle.primary)
     async def hit_callback(self, interaction: discord.Interaction, button: Button):
-       response = UrlUtil.hit()
-       await interaction.response.edit_message(delete_after=0.01)
-       msg = await interaction.channel.send(embed=formatEmbed(response.json()))
-       await interaction.followup.send(view=GameUI())
+        '''handles interactions when you draw a card; automatically ends game when dealer or player has 21 and updates game board'''
+        result = UrlUtil.hit()
+        await interaction.response.defer()
+        if self.board.getPhase() == "RESOLVED":
+            if self.board.getPlayerValue() == 21 or self.board.getDealerValue() == 21:
+                UrlUtil.stand()
+            msg = await interaction.original_response()
+            await msg.edit(view=EndGameUI())
+        await self.board.edit(embed=formatEmbed(result, i=interaction)), 
+   
     @discord.ui.button(label="Stand", row=0, style=discord.ButtonStyle.primary)
     async def stand_callback(self, interaction: discord.Interaction, button: Button):
-       # await interaction.response.send_message("You pressed me!")
-       response = UrlUtil.stand()
-       await interaction.response.edit_message(delete_after=0.01)
-       await interaction.channel.send(embed=formatEmbed(response.json()))
+        '''ends players turn and the game when pressed'''
+        result = UrlUtil.stand()
+        await interaction.response.edit_message(view=EndGameUI())
+        await self.board.edit(embed=formatEmbed(result,i=interaction))
+
+# UI for game ending (ending/start new game)
+class EndGameUI(GameUI):
+    @discord.ui.button(label="New Game", row=0, style=discord.ButtonStyle.green)
+    async def new_game_callback(self, interaction: discord.Interaction, button: Button):
+        '''when pressed, disables buttons and waits for player's input for new bet amount for new game '''
+        result = UrlUtil.getGameState()
+        for item in self.children:
+            item.disabled = True
+        await interaction.response.edit_message(view=self)
+        await self.board.continueGame(i=interaction,gameData=result)
+        msg = await interaction.original_response()
+        await msg.edit(view=GameUI())
+    @discord.ui.button(label="End Game", row=0, style=discord.ButtonStyle.red)
+    async def end_game_callback(self, interaction: discord.Interaction, button: Button):
+        UrlUtil.finishGame()
+        await interaction.response.edit_message(delete_after=0.01)
         
 
     
