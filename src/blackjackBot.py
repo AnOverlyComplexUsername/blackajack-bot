@@ -6,7 +6,7 @@ from discord.ext import commands
 from dotenv import load_dotenv
 
 import UrlUtil 
-import blackjackGUI as gui
+from blackjackGUI import StartGameUI, EndGameUI
 #from jsonFormatter import formatEmbed
 from GameBoard import GameBoard
 
@@ -24,6 +24,7 @@ client : Client = commands.Bot(command_prefix="gaf9403i",intents=intents, )
 
 gameBoard : GameBoard = GameBoard(client=client)
     
+
     #commands
 @client.tree.command(name="start_new_game", guild=SRVRID)
 async def start_game(i:discord.Interaction):
@@ -37,17 +38,23 @@ async def start_game(i:discord.Interaction):
     await i.response.send_message(content="Starting game...",ephemeral=True)
     try:
         await gameBoard.startNewGame(i=i,gameData=gameData)  
-        await i.followup.send(view=gui.GameUI(),ephemeral=True)
+        await i.followup.send(view=StartGameUI(gameBoard),ephemeral=True)
     except:
         await i.followup.send(content="Error: Enter an acceptable bet", ephemeral=True)   
    
 @client.tree.command(name="resume_session", guild=SRVRID)
 async def resume_session(i:discord.Interaction):
-    UrlUtil.resumeGame("ca32e56c-455b-45e0-aaf6-0910929b0ffb")
+    ''' resumes a game given a session ID'''
+    UrlUtil.setGameID("ca32e56c-455b-45e0-aaf6-0910929b0ffb")
+    UrlUtil.resumeGame()
     response = UrlUtil.resetGame()
     gameData : dict = response.json()
     await i.response.send_message(content="Resuming game...",ephemeral=True)
-    await gameBoard.continueGame(i=i, gameData=gameData)
+   # try:
+    await gameBoard.startNewGame(i=i,gameData=gameData)  
+    await i.followup.send(view=StartGameUI(gameBoard),ephemeral=True)
+    #except:
+        # await i.followup.send(content="Error: Enter an acceptable bet", ephemeral=True)   
 
 
   
@@ -78,4 +85,3 @@ def startDiscord() -> None:
     client.run(token=TOKEN)
     client.clear()
     
-startDiscord()

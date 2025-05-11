@@ -1,3 +1,3 @@
+from blackjackBot import startDiscord
 
-
-from typing import Final
+startDiscord()

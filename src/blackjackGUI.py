@@ -31,7 +31,7 @@ class MyView(discord.ui.View):
     async def select_callback(self, select, interaction : discord.Interaction): # the function called when the user is done selecting options
         await interaction.response.send_message(f"Awesome! I like {select.values[0]} too!")
 
-class GameStartUI(discord.ui.View):
+class StartGameUI(discord.ui.View):
     @discord.ui.button(label="Button 1", row=0, style=discord.ButtonStyle.primary)
     async def click_me_button(self, interaction: discord.Interaction, button: Button):
         await interaction.response.send_message("You clicked the button!")
@@ -65,19 +65,19 @@ class StartGameUI(GameUI):
         '''handles interactions when you draw a card; automatically ends game when dealer or player has 21 and updates game board'''
         result = UrlUtil.hit()
         await interaction.response.defer()
+        if self.board.getPlayerValue() == 21 or self.board.getDealerValue() == 21:
+            UrlUtil.stand()
         if self.board.getPhase() == "RESOLVED":
-            if self.board.getPlayerValue() == 21 or self.board.getDealerValue() == 21:
-                UrlUtil.stand()
             msg = await interaction.original_response()
-            await msg.edit(view=EndGameUI())
-        await self.board.edit(embed=formatEmbed(result, i=interaction)), 
+            await msg.edit(view=EndGameUI(self.board))
+        await self.board.getBoardMessage().edit(embed=formatEmbed(result, i=interaction)), 
    
     @discord.ui.button(label="Stand", row=0, style=discord.ButtonStyle.primary)
     async def stand_callback(self, interaction: discord.Interaction, button: Button):
         '''ends players turn and the game when pressed'''
         result = UrlUtil.stand()
-        await interaction.response.edit_message(view=EndGameUI())
-        await self.board.edit(embed=formatEmbed(result,i=interaction))
+        await interaction.response.edit_message(view=EndGameUI(board=self.board))
+        await self.board.getBoardMessage().edit(embed=formatEmbed(result,i=interaction))
 
 # UI for game ending (ending/start new game)
 class EndGameUI(GameUI):
@@ -90,7 +90,7 @@ class EndGameUI(GameUI):
         await interaction.response.edit_message(view=self)
         await self.board.continueGame(i=interaction,gameData=result)
         msg = await interaction.original_response()
-        await msg.edit(view=GameUI())
+        await msg.edit(view=StartGameUI(self.board))
     @discord.ui.button(label="End Game", row=0, style=discord.ButtonStyle.red)
     async def end_game_callback(self, interaction: discord.Interaction, button: Button):
         UrlUtil.finishGame()
