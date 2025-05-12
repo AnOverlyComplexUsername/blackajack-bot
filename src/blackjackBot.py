@@ -57,22 +57,22 @@ async def start_game(i:discord.Interaction):
         await i.followup.send(content="Error: Enter an acceptable bet", ephemeral=True)   
         print(e)
 
-     '''Resumes a game given a session ID'''
-    UrlUtil.setGameID(id=id.strip())
-    response = UrlUtil.resumeGame()
-    match response.status_code:
-        case 200: #checks if request passes
-            gameData : dict = response.json()
-            await i.response.send_message(content="Resuming game...",ephemeral=True)
-            try:
-                await gameBoard.startNewGame(i=i,gameData=gameData)  
-                await i.followup.send(view=StartGameUI(gameBoard),ephemeral=True)
-            except:
-                await i.followup.send(content="Error: Enter an acceptable bet", ephemeral=True) 
-        case 400: #if request is bad, send error
-            await i.response.send_message(content="Server Error: Enter a valid ID",ephemeral=True)
-        case __:
-            await i.response.send_message(content="Server Error; try again", ephemeral=True)
+  #   '''Resumes a game given a session ID'''
+    # UrlUtil.setGameID(id=id.strip())
+    # response = UrlUtil.resumeGame()
+    # match response.status_code:
+    #     case 200: #checks if request passes
+    #         gameData : dict = response.json()
+    #         await i.response.send_message(content="Resuming game...",ephemeral=True)
+    #         try:
+    #             await gameBoard.startNewGame(i=i,gameData=gameData)  
+    #             await i.followup.send(view=StartGameUI(gameBoard),ephemeral=True)
+    #         except:
+    #             await i.followup.send(content="Error: Enter an acceptable bet", ephemeral=True) 
+    #     case 400: #if request is bad, send error
+    #         await i.response.send_message(content="Server Error: Enter a valid ID",ephemeral=True)
+    #     case __:
+    #         await i.response.send_message(content="Server Error; try again", ephemeral=True)
 
 @client.tree.command(name="resume_session", guild=SRVRID)
 async def resume_session(i:discord.Interaction, id : str):

@@ -86,6 +86,7 @@ class StartGameUI(GameUI):
     async def hit_callback(self, interaction: discord.Interaction, button: Button):
         '''handles interactions when you draw a card; automatically ends game when dealer or player has 21 and updates game board'''
         result = self.board.getSession().hit()
+        self.board.setGameData(result)
         await interaction.response.defer()
         if self.board.getPlayerValue() == 21 or self.board.getDealerValue() == 21:
             self.board.getSession().stand()
@@ -98,6 +99,7 @@ class StartGameUI(GameUI):
     async def stand_callback(self, interaction: discord.Interaction, button: Button):
         '''ends players turn and the game when pressed'''
         result = self.board.getSession().stand()
+        self.board.setGameData(result)
         await interaction.response.edit_message(view=EndGameUI(board=self.board))
         await self.board.getBoardMessage().edit(embed=formatEmbed(result, i=interaction))
 

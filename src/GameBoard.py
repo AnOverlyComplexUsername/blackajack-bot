@@ -70,6 +70,7 @@ class GameBoard:
     def getSession(self) -> UrlUtil:
         '''returns current url utility used for interacting w/ game'''
         return self.session
+    
             
     async def startNewGame(self, i : discord.Interaction, gameData : dict = None):
         '''starts new game or resumes most recent unsaved game'''
