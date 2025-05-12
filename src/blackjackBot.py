@@ -89,7 +89,7 @@ async def on_ready() -> None:
     try:
         getUserData()
     except:
-        open(savedDataFilepath, "x") #creates new file if no userdata is found
+        open(savedDataFilepath, "x") #creates new file if no user data is found
         
     print(f'{client.user} is now running!')
     try:
