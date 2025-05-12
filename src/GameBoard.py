@@ -1,12 +1,12 @@
 import discord
 import UrlUtil
 from jsonFormatter import formatEmbed 
-
+from UrlUtil import UrlUtil
 
 
 class GameBoard:
     
-    sesID : str = None
+    session : UrlUtil  = UrlUtil()
     board : discord.Message = None
     data : dict = None
     client : discord.Client= None
@@ -16,9 +16,9 @@ class GameBoard:
         ''' Parameters
         -----------
         gameData: :class:`dict`
-            dictionary of JSON game data
+            dictionary of JSON game data  
         board: :class:`Message`
-            gameBoard message that's being used for current game
+            gameBoard message that's being used for current game  
         client: :class`client`
             current discord bot client being used
         '''
@@ -26,7 +26,15 @@ class GameBoard:
         self.board = boardMsg 
         self.client = client
         if gameData:
-            self.sesID = gameData.get("sessionId")
+            self.session.setGameID(id=self.data.get("sessionId"))
+
+    def setSessionID(self, id : str):
+        '''sets session ID'''
+        self.session.setGameID(id=id)
+
+    def getSessionID(self) -> str:
+        '''returns current session ID'''
+        return self.session.getGameID()
 
     def setBoardMessage(self,msg : discord.Message):
         ''' sets current board being used'''
@@ -40,39 +48,47 @@ class GameBoard:
         '''updates and sets game data'''
         self.data = data
     
+    def getGameData(self) -> dict:
+        return self.data
+    
     def getBalance(self) -> str:
         '''returns the current player balance'''
         return str(self.data.get("balance"))
 
     def getPlayerValue(self) -> int:
         '''returns current player card value'''
-        return UrlUtil.getGameState().get("playerValue")
+        return self.data.get("playerValue")
     
     def getDealerValue(self) -> int:
         '''returns current dealer card value'''
-        return UrlUtil.getGameState().get("dealerValue")
+        return self.data.get("dealerValue")
     
     def getPhase(self) -> str:
         ''' returns current state of game'''
-        return UrlUtil.getGameState().get("phase")
+        return self.data.get("phase")
+    
+    def getSession(self) -> UrlUtil:
+        '''returns current url utility used for interacting w/ game'''
+        return self.session
             
-    async def startNewGame(self, i : discord.Interaction, gameData : dict):
+    async def startNewGame(self, i : discord.Interaction, gameData : dict = None):
         '''starts new game or resumes most recent unsaved game'''
-        self.setGameData(gameData)
-        if gameData.get("phase") == "RESOLVED":
-            UrlUtil.resetGame()
-        if gameData.get("phase") == "BETTING":
+        if gameData: self.setGameData(gameData)
+        else: self.setGameData(self.session.startGame().json())
+        self.setSessionID(self.data.get("sessionId"))
+        if self.getPhase() == "RESOLVED":
+            self.session.resetGame()
+        if self.getPhase() == "BETTING":
             await self.recieveNewBet(i=i)
-        self.board = await i.channel.send(embed=formatEmbed(gameData=self.data, i=i))
+        self.setBoardMessage(await i.channel.send(embed=formatEmbed(gameData=self.data, i=i)))
         
     async def continueGame(self, i : discord.Interaction, gameData : dict):
         ''' continues current game and starts a new round'''
         self.setGameData(gameData)
-        
         while True:
             try:
                 if gameData.get("phase") == "RESOLVED":
-                    UrlUtil.resetGame()
+                    self.session.resetGame()
                     await self.recieveNewBet(i=i)
                     await self.board.edit(embed=formatEmbed(gameData=self.data, i=i))
                 break
@@ -88,7 +104,7 @@ class GameBoard:
         await input.delete()
         if result > 1000 or result <= 0 or result % 10 != 0:
             raise Exception("Not valid number")
-        self.data = UrlUtil.bet(result)
+        self.data = self.session.bet(result)
 
     
 

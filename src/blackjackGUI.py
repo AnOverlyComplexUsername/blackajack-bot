@@ -1,6 +1,5 @@
 import discord 
 from discord import Button
-import UrlUtil
 from GameBoard import GameBoard
 from jsonFormatter import formatEmbed, formatSessionsEmbed
 
@@ -66,10 +65,10 @@ class StartGameUI(GameUI):
     @discord.ui.button(label="Hit", row=0, style=discord.ButtonStyle.primary)
     async def hit_callback(self, interaction: discord.Interaction, button: Button):
         '''handles interactions when you draw a card; automatically ends game when dealer or player has 21 and updates game board'''
-        result = UrlUtil.hit()
+        result = self.board.getSession().hit()
         await interaction.response.defer()
         if self.board.getPlayerValue() == 21 or self.board.getDealerValue() == 21:
-            UrlUtil.stand()
+            self.board.getSession().stand()
         if self.board.getPhase() == "RESOLVED":
             msg = await interaction.original_response()
             await msg.edit(view=EndGameUI(self.board))
@@ -78,7 +77,7 @@ class StartGameUI(GameUI):
     @discord.ui.button(label="Stand", row=0, style=discord.ButtonStyle.primary)
     async def stand_callback(self, interaction: discord.Interaction, button: Button):
         '''ends players turn and the game when pressed'''
-        result = UrlUtil.stand()
+        result = self.board.getSession().stand()
         await interaction.response.edit_message(view=EndGameUI(board=self.board))
         await self.board.getBoardMessage().edit(embed=formatEmbed(result,i=interaction))
 
@@ -87,7 +86,7 @@ class EndGameUI(GameUI):
     @discord.ui.button(label="New Game", row=0, style=discord.ButtonStyle.green)
     async def new_game_callback(self, interaction: discord.Interaction, button: Button):
         '''when pressed, disables buttons and waits for player's input for new bet amount for new game '''
-        result = UrlUtil.getGameState()
+        result = self.board.getSession().getGameState()
         for item in self.children:
             item.disabled = True
         await interaction.response.edit_message(view=self)
@@ -97,7 +96,7 @@ class EndGameUI(GameUI):
     @discord.ui.button(label="End Game", row=0, style=discord.ButtonStyle.red)
     async def end_game_callback(self, interaction: discord.Interaction, button: Button):
         '''ends current game and archives results to database after finishing'''
-        UrlUtil.finishGame()
+        self.board.getSession().finishGame()
         await interaction.response.edit_message(delete_after=0.01)
         
 

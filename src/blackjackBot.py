@@ -4,8 +4,8 @@ import discord
 from discord import Intents, Client 
 from discord.ext import commands
 from dotenv import load_dotenv
-
-import UrlUtil 
+import json
+from UrlUtil import getGameSessions
 from blackjackGUI import StartGameUI, SessionList
 from jsonFormatter import formatSessionsEmbed
 from GameBoard import GameBoard
@@ -21,38 +21,55 @@ intents: Intents = Intents.all()
 intents.message_content = True
 client : Client = commands.Bot(command_prefix="gaf9403i",intents=intents, )
 
-gameBoard : GameBoard = GameBoard(client=client)
+#game data hndling
+savedDataFilepath = "data/user_data.json"
+#gameBoard : GameBoard = GameBoard(client=client)
+
+games : dict[discord.User, GameBoard] = {} #dictionary mapping users to current active session
+
+def getUserData():
+    '''gets user data from file'''
+    global games
+    with open(savedDataFilepath, "r") as file:
+            if os.path.getsize(savedDataFilepath) != 0: 
+                games = json.load(file)
+                file.close()
+
+def updateUserGameData(user : discord.User, board : GameBoard):
+    '''updates games dictionary'''
+    games[user] = board
+    print(board.getSessionID())
     
+
 
     #commands
 @client.tree.command(name="start_new_game", guild=SRVRID)
 async def start_game(i:discord.Interaction):
     '''Starts a new game or resumes most recent game'''
-    global gameBoard
-    response = UrlUtil.startGame()
-    gameData : dict = response.json()
-    sessionID = gameData.get("sessionId")
-    print(sessionID)
-    UrlUtil.setGameID(sessionID)
-    await i.response.send_message(content="Starting game...",ephemeral=True)
     try:
-        await gameBoard.startNewGame(i=i,gameData=gameData)  
+        gameBoard : GameBoard = GameBoard(client=client)
+        await i.response.send_message(content="Starting game...",ephemeral=True)
+        await gameBoard.startNewGame(i=i)  
         await i.followup.send(view=StartGameUI(gameBoard),ephemeral=True)
+        updateUserGameData( i, gameBoard)
+
     except:
         await i.followup.send(content="Error: Enter an acceptable bet", ephemeral=True)   
+
    
 @client.tree.command(name="resume_session", guild=SRVRID)
 async def resume_session(i:discord.Interaction, id : str):
     '''Resumes a game given a session ID'''
-    UrlUtil.setGameID(id=id.strip())
-    response = UrlUtil.resumeGame()
-    gameData : dict = response.json()
+    gameBoard = GameBoard(client=client)
+    gameBoard.setSessionID(id=id.strip())
     await i.response.send_message(content="Resuming game...",ephemeral=True)
     try:
-        await gameBoard.startNewGame(i=i,gameData=gameData)  
+        await gameBoard.startNewGame(i=i)  
         await i.followup.send(view=StartGameUI(gameBoard),ephemeral=True)
     except:
-        await i.followup.send(content="Error: Enter an acceptable bet", ephemeral=True)   
+        await i.followup.send(content="Error: Enter an acceptable bet", ephemeral=True)
+    updateUserGameData(i.user, board=gameBoard)
+       
 
 
   
@@ -60,19 +77,25 @@ async def resume_session(i:discord.Interaction, id : str):
 async def list_sessions(i:discord.Interaction):
     '''Returns list of ongoing sessions from oldest to newest'''
     entryRange = 5
-    sessions = UrlUtil.getGameSessions()        
+    sessions = getGameSessions()        
     await i.response.send_message(embed=formatSessionsEmbed(sessions=sessions, startIndex= 0, entryRange=entryRange),view=SessionList(sesList=sessions,entryRange=entryRange))
     
+
 
 #handling startup
 @client.event
 async def on_ready() -> None:
-     print(f'{client.user} is now running!')
-     try:
-         synced = await client.tree.sync(guild=SRVRID)
-         print(f"Synced {len(synced)} commands")
-     except Exception as e:
-         print(e)
+    try:
+        getUserData()
+    except:
+        open(savedDataFilepath, "x") #creates new file if no userdata is found
+        
+    print(f'{client.user} is now running!')
+    try:
+        synced = await client.tree.sync(guild=SRVRID)
+        print(f"Synced {len(synced)} commands")
+    except Exception as e:
+        print(e)
              
 #entry point
 def startDiscord() -> None:
