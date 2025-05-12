@@ -3,7 +3,7 @@ from typing import Final
 from dotenv import load_dotenv
 import requests
 
-'''wrapper functions for interactiong w/ blackjack server'''
+'''wrapper functions for interacting w/ blackjack server'''
 
 load_dotenv()
 USER : Final[str] = os.getenv('USER')

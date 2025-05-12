@@ -1,6 +1,6 @@
 import discord
 
-'''formats game data jsons into embeds'''
+'''formats game data jsons into Discord embeds'''
 
 def formatSessionsEmbed(sessions : list[dict], startIndex : int = 0, entryRange: int = 5) -> discord.Embed:
     '''returns a formatted embed of a list of sessions

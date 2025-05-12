@@ -35,7 +35,7 @@ class SessionList(discord.ui.View):
             prevButton.disabled = True
     
     def update(self):
-        '''updates UI state and returns a copy of the sessionList'''
+        '''updates GUI button state and returns a copy of the sessionList'''
         if self.listSize < self.entryRange or self.curStartIndex + self.entryRange > self.listSize:
             nextButton : discord.Button= [x for x in self.children if x.custom_id == "next"][0]
             nextButton.disabled = True
@@ -49,7 +49,9 @@ class SessionList(discord.ui.View):
             prevButton : discord.Button= [x for x in self.children if x.custom_id == "prev"][0]
             prevButton.disabled = False
         return self
-            
+    
+    #every time a button is pressed, message is edited; 
+    #buttons & embed are rebuilt and passed into edited message 
     @discord.ui.button(label="First Page", row=0, style=discord.ButtonStyle.primary)
     async def firstpg_callback(self, interaction: discord.Interaction, button: Button):
         self.curStartIndex = 0
@@ -112,6 +114,7 @@ class EndGameUI(GameUI):
         await self.board.continueGame(i=interaction,gameData=result)
         msg = await interaction.original_response()
         await msg.edit(view=StartGameUI(self.board))
+        
     @discord.ui.button(label="End Game", row=0, style=discord.ButtonStyle.red)
     async def end_game_callback(self, interaction: discord.Interaction, button: Button):
         '''ends current game and archives results to database after finishing'''
