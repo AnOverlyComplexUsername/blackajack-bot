@@ -53,23 +53,24 @@ async def start_game(i:discord.Interaction):
         await gameBoard.startNewGame(i=i)  
         await i.followup.send(view=StartGameUI(gameBoard),ephemeral=True)
         updateUserGameData( i, gameBoard)
-
-    except:
+    except Exception as e:
         await i.followup.send(content="Error: Enter an acceptable bet", ephemeral=True)   
+        print(e)
 
    
 @client.tree.command(name="resume_session", guild=SRVRID)
 async def resume_session(i:discord.Interaction, id : str):
     '''Resumes a game given a session ID'''
     gameBoard = GameBoard(client=client)
-    gameBoard.setSessionID(id=id.strip())
     await i.response.send_message(content="Resuming game...",ephemeral=True)
     try:
-        await gameBoard.startNewGame(i=i)  
+        await gameBoard.resumeGame(i=i,id=id.strip())  
         await i.followup.send(view=StartGameUI(gameBoard),ephemeral=True)
-    except:
+        updateUserGameData(i.user, board=gameBoard)
+
+    except Exception as e:
         await i.followup.send(content="Error: Enter an acceptable bet", ephemeral=True)
-    updateUserGameData(i.user, board=gameBoard)
+        print(e)
        
 
 

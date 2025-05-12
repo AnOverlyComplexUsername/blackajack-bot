@@ -57,11 +57,11 @@ class GameBoard:
 
     def getPlayerValue(self) -> int:
         '''returns current player card value'''
-        return self.data.get("playerValue")
+        return self.session.getGameState().get("playerValue")
     
     def getDealerValue(self) -> int:
         '''returns current dealer card value'''
-        return self.data.get("dealerValue")
+        return self.session.getGameState().get("dealerValue")
     
     def getPhase(self) -> str:
         ''' returns current state of game'''
@@ -79,9 +79,32 @@ class GameBoard:
         if self.getPhase() == "RESOLVED":
             self.session.resetGame()
         if self.getPhase() == "BETTING":
-            await self.recieveNewBet(i=i)
+            while True:
+                try:
+                    await self.recieveNewBet(i=i)
+                    break
+                except:
+                    await i.followup.send(content="Error: Enter an acceptable bet", ephemeral=True)
+                
         self.setBoardMessage(await i.channel.send(embed=formatEmbed(gameData=self.data, i=i)))
         
+    async def resumeGame(self, i : discord.Interaction, id : str):
+        '''resumes a game given a game ID'''
+        self.setSessionID(id=id)
+        self.session.resumeGame()
+        self.setGameData(self.session.getGameState())
+        if self.getPhase() == "RESOLVED":
+            self.session.resetGame()
+        if self.getPhase() == "BETTING":
+            while True:
+                try:
+                    await self.recieveNewBet(i=i)
+                    break
+                except:
+                    await i.followup.send(content="Error: Enter an acceptable bet", ephemeral=True)
+                
+        self.setBoardMessage(await i.channel.send(embed=formatEmbed(gameData=self.data, i=i)))
+    
     async def continueGame(self, i : discord.Interaction, gameData : dict):
         ''' continues current game and starts a new round'''
         self.setGameData(gameData)
@@ -100,11 +123,11 @@ class GameBoard:
         msg = await i.channel.send(content=f"Current Balance: {self.getBalance()} \n Enter bet in increments of 10, under 1000: ")
         input : discord.Message = await self.client.wait_for("message", check=lambda message : message.author == i.user)
         result = int(input.content)
+        await input.delete()
+        await msg.delete()
         if result > 1000 or result <= 0 or result % 10 != 0:
             raise Exception("Not valid number")
-        await msg.delete()
-        await input.delete()
-        self.data = UrlUtil.bet(result)
+        self.data = self.session.bet(result)
 
     
 
