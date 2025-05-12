@@ -100,11 +100,11 @@ class GameBoard:
         msg = await i.channel.send(content=f"Current Balance: {self.getBalance()} \n Enter bet in increments of 10, under 1000: ")
         input : discord.Message = await self.client.wait_for("message", check=lambda message : message.author == i.user)
         result = int(input.content)
-        await msg.delete()
-        await input.delete()
         if result > 1000 or result <= 0 or result % 10 != 0:
             raise Exception("Not valid number")
-        self.data = self.session.bet(result)
+        await msg.delete()
+        await input.delete()
+        self.data = UrlUtil.bet(result)
 
     
 

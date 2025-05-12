@@ -20,6 +20,7 @@ SRVRID: Final = discord.Object(id=os.getenv('SERVER_ID'))
 intents: Intents = Intents.all()
 intents.message_content = True
 client : Client = commands.Bot(command_prefix="gaf9403i",intents=intents, )
+#command prefix is set to random string, since we are not using command prefixes
 
 #game data hndling
 savedDataFilepath = "data/user_data.json"

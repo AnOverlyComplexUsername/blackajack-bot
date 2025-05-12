@@ -18,7 +18,8 @@ class SessionList(discord.ui.View):
     listSize : int = 0
     curStartIndex : int = 0
     entryRange : int = 5
-    
+               
+        
     def __init__(self, sesList : list[dict], curStartIndex : int = 0, entryRange : int = 5, timeout = 300):
         super().__init__(timeout=timeout)
         self.listSize = sesList.__len__()
@@ -31,25 +32,44 @@ class SessionList(discord.ui.View):
         if self.curStartIndex == 0:
             prevButton : discord.Button= [x for x in self.children if x.custom_id == "prev"][0]
             prevButton.disabled = True
-            
+    
+    def update(self):
+        '''updates GUI button state and returns a copy of the sessionList'''
+        if self.listSize < self.entryRange or self.curStartIndex + self.entryRange > self.listSize:
+            nextButton : discord.Button= [x for x in self.children if x.custom_id == "next"][0]
+            nextButton.disabled = True
+        else:
+            nextButton : discord.Button= [x for x in self.children if x.custom_id == "next"][0]
+            nextButton.disabled = False
+        if self.curStartIndex == 0:
+            prevButton : discord.Button= [x for x in self.children if x.custom_id == "prev"][0]
+            prevButton.disabled = True
+        else: 
+            prevButton : discord.Button= [x for x in self.children if x.custom_id == "prev"][0]
+            prevButton.disabled = False
+        return self
+    
+    #every time a button is pressed, message is edited; 
+    #buttons & embed are rebuilt and passed into edited message 
     @discord.ui.button(label="First Page", row=0, style=discord.ButtonStyle.primary)
     async def firstpg_callback(self, interaction: discord.Interaction, button: Button):
-        await interaction.response.edit_message(view=SessionList(sesList=self.sesList,entryRange=self.entryRange,curStartIndex=0),embed=formatSessionsEmbed(sessions=self.sesList, startIndex=0, entryRange=self.entryRange))   
+        self.curStartIndex = 0
+        await interaction.response.edit_message(view=self.update(),embed=formatSessionsEmbed(sessions=self.sesList, startIndex=0, entryRange=self.entryRange))   
         
     @discord.ui.button(label="Previous", row=0, style=discord.ButtonStyle.primary, custom_id="prev")
     async def prev_callback(self, interaction: discord.Interaction, button: Button):
         self.curStartIndex -= self.entryRange
-        await interaction.response.edit_message(view=SessionList(sesList=self.sesList,entryRange=self.entryRange,curStartIndex=self.curStartIndex),embed=formatSessionsEmbed(sessions=self.sesList, startIndex=self.curStartIndex, entryRange=self.entryRange))
+        await interaction.response.edit_message(view=self.update(),embed=formatSessionsEmbed(sessions=self.sesList, startIndex=self.curStartIndex, entryRange=self.entryRange))
 
     @discord.ui.button(label="Next", row=0, style=discord.ButtonStyle.primary,custom_id="next")
     async def next_callback(self, interaction: discord.Interaction, button: Button):
         self.curStartIndex += self.entryRange
-        await interaction.response.edit_message(view=SessionList(sesList=self.sesList,entryRange=self.entryRange,curStartIndex=self.curStartIndex),embed=formatSessionsEmbed(sessions=self.sesList, startIndex=self.curStartIndex, entryRange=self.entryRange))
+        await interaction.response.edit_message(view=self.update(),embed=formatSessionsEmbed(sessions=self.sesList, startIndex=self.curStartIndex, entryRange=self.entryRange))
         
     @discord.ui.button(label="Last Page", row=0, style=discord.ButtonStyle.primary)
     async def lastpg_callback(self, interaction: discord.Interaction, button: Button):
-        lastIndex =  self.listSize - (self.listSize % self.entryRange)
-        await interaction.response.edit_message(view=SessionList(sesList=self.sesList,entryRange=self.entryRange,curStartIndex=lastIndex),embed=formatSessionsEmbed(sessions=self.sesList, startIndex=lastIndex, entryRange=self.entryRange))   
+        self.curStartIndex =  self.listSize - (self.listSize % self.entryRange)
+        await interaction.response.edit_message(view=self.update(),embed=formatSessionsEmbed(sessions=self.sesList, startIndex=self.curStartIndex, entryRange=self.entryRange))   
         
         
 
@@ -79,7 +99,7 @@ class StartGameUI(GameUI):
         '''ends players turn and the game when pressed'''
         result = self.board.getSession().stand()
         await interaction.response.edit_message(view=EndGameUI(board=self.board))
-        await self.board.getBoardMessage().edit(embed=formatEmbed(result,i=interaction))
+        await self.board.getBoardMessage().edit(embed=formatEmbed(result, i=interaction))
 
 # UI for game ending (ending/start new game)
 class EndGameUI(GameUI):
@@ -93,6 +113,7 @@ class EndGameUI(GameUI):
         await self.board.continueGame(i=interaction,gameData=result)
         msg = await interaction.original_response()
         await msg.edit(view=StartGameUI(self.board))
+        
     @discord.ui.button(label="End Game", row=0, style=discord.ButtonStyle.red)
     async def end_game_callback(self, interaction: discord.Interaction, button: Button):
         '''ends current game and archives results to database after finishing'''
