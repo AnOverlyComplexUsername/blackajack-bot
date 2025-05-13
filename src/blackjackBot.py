@@ -87,7 +87,7 @@ async def resume_session(i:discord.Interaction, id : str):
     except Exception as e:
         await i.followup.send(content="Error: Enter an acceptable bet", ephemeral=True)
         print(e)
-         '''Resumes a game given a session ID'''
+#         '''Resumes a game given a session ID'''
     # UrlUtil.setGameID(id=id.strip())
     # response = UrlUtil.resumeGame()
     # match response.status_code:

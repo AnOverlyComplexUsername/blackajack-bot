@@ -82,6 +82,8 @@ class GameUI(discord.ui.View):
         
  #UI for when the game starts (hit/stand)       
 class StartGameUI(GameUI):
+         
+        
     @discord.ui.button(label="Hit", row=0, style=discord.ButtonStyle.primary)
     async def hit_callback(self, interaction: discord.Interaction, button: Button):
         '''handles interactions when you draw a card; automatically ends game when dealer or player has 21 and updates game board'''
