@@ -38,9 +38,10 @@ async def start_game(i:discord.Interaction):
     await i.response.send_message(content="Starting game...",ephemeral=True)
     try:
         await gameBoard.startNewGame(i=i,gameData=gameData)  
-        await i.followup.send(view=StartGameUI(gameBoard),ephemeral=True)
-    except:
+        await i.followup.send(view=StartGameUI(board=gameBoard),ephemeral=True)
+    except Exception as e:
         await i.followup.send(content="Error: Enter an acceptable bet", ephemeral=True)   
+        print(e)
    
 @client.tree.command(name="resume_session", guild=SRVRID)
 async def resume_session(i:discord.Interaction, id : str):
@@ -53,7 +54,7 @@ async def resume_session(i:discord.Interaction, id : str):
             await i.response.send_message(content="Resuming game...",ephemeral=True)
             try:
                 await gameBoard.startNewGame(i=i,gameData=gameData)  
-                await i.followup.send(view=StartGameUI(gameBoard),ephemeral=True)
+                await i.followup.send(view=StartGameUI(board=gameBoard),ephemeral=True)
             except:
                 await i.followup.send(content="Error: Enter an acceptable bet", ephemeral=True) 
         case 400: #if request is bad, send error
