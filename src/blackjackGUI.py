@@ -5,8 +5,10 @@ from GameBoard import GameBoard
 from jsonFormatter import formatEmbed, formatSessionsEmbed
 
 class SessionList(discord.ui.View):
-    ''' Parameters
-        -----------
+    ''' 
+        Creates a set of buttons for navigating session list embed  
+            Parameters
+            -----------
     sesList: :class:`list`
         dictionary of list of all sessions in a dictionary format   
     curStartIndex: :class:`int`
@@ -83,6 +85,11 @@ class GameUI(discord.ui.View):
         
  #UI for when the game starts (hit/stand)       
 class StartGameUI(GameUI):
+    '''hit and stand buttons for playing the game  
+            parameters
+            ----------
+        board: :class:`GameBoard`
+        Used for keeping track of active board'''
     @discord.ui.button(label="Hit", row=0, style=discord.ButtonStyle.primary)
     async def hit_callback(self, interaction: discord.Interaction, button: Button):
         '''handles interactions when you draw a card; automatically ends game when dealer or player has 21 and updates game board'''
