@@ -81,7 +81,7 @@ class GameBoard:
     
     async def recieveNewBet(self, i : discord.Interaction) -> dict:
         '''recieves new bet by awaiting user's new bet in Discord, sends new bet and returns game state result'''
-        msg = await i.channel.send(content=f"Current Balance: {self.getBalance()} \n Enter bet in increments of 10, under 1000: ")
+        msg = await i.channel.send(content=f"Current Balance: {self.getBalance()} \n Enter bet in increments of 10, up to 1000: ")
         input : discord.Message = await self.client.wait_for("message", check=lambda message : message.author == i.user)
         result = int(input.content)
         if result > 1000 or result <= 0 or result % 10 != 0:
